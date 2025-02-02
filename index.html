@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Login Portal</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        /* Modern Dark Theme */
+        :root {
+            --bg: #0a0a0a;
+            --card: #1a1a1a;
+            --accent: #00ff88;
+            --text: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .auth-card {
+            background: var(--card);
+            padding: 2rem;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--text);
+            margin-top: 8px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent);
+            border: none;
+            border-radius: 8px;
+            color: var(--bg);
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .google-btn {
+            background: #4285f4 !important;
+            color: white !important;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-card">
+        <!-- Sign In Form -->
+        <div id="signinForm">
+            <h2>Welcome Back</h2>
+            <div class="form-group">
+                <input type="email" id="email" placeholder="Email Address">
+            </div>
+            <div class="form-group">
+                <input type="password" id="password" placeholder="Password">
+            </div>
+            <button onclick="handleSignIn()">Sign In</button>
+            <div id="g_id_onload"
+                data-client_id="YOUR_CLIENT_ID"
+                data-login_uri="https://yourusername.github.io"
+                data-callback="handleGoogleLogin">
+            </div>
+            <button class="google-btn" 
+                    id="googleSignInButton"
+                    onclick="document.getElementById('googleSignInButton').click()">
+                <i class="fab fa-google"></i> Continue with Google
+            </button>
+            <p style="text-align: center; margin-top: 1rem;">
+                New user? <a href="#" onclick="showSignUp()" style="color: var(--accent);">Create Account</a>
+            </p>
+        </div>
+
+        <!-- Sign Up Form -->
+        <div id="signupForm" style="display: none;">
+            <h2>Create Account</h2>
+            <div class="form-group">
+                <input type="text" id="fullName" placeholder="Full Name">
+            </div>
+            <div class="form-group">
+                <input type="email" id="newEmail" placeholder="Email Address">
+            </div>
+            <div class="form-group">
+                <input type="password" id="newPassword" placeholder="Password">
+            </div>
+            <button onclick="handleSignUp()">Sign Up</button>
+            <p style="text-align: center; margin-top: 1rem;">
+                Already have an account? <a href="#" onclick="showSignIn()" style="color: var(--accent);">Sign In</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Replace these with your values
+        const GOOGLE_CLIENT_ID = 'YOUR_CLIENT_ID';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxlcEGtXxFo8U37-Efg6ZXP7w9pEUKsRmsM7r-T3PpdOIJgcqT2W6PMNV4ZPIPEa6wGpw/exec';
+
+        // Form Toggle
+        function showSignUp() {
+            document.getElementById('signinForm').style.display = 'none';
+            document.getElementById('signupForm').style.display = 'block';
+        }
+
+        function showSignIn() {
+            document.getElementById('signupForm').style.display = 'none';
+            document.getElementById('signinForm').style.display = 'block';
+        }
+
+        // Handle Google Login
+        function handleGoogleLogin(response) {
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    action: 'google-signin',
+                    credential: response.credential
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    alert('Welcome ' + data.name + '!');
+                    window.location.href = '/dashboard.html';
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            });
+        }
+
+        // Email/Password Sign In
+        async function handleSignIn() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    action: 'signin',
+                    email: email,
+                    password: password
+                })
+            });
+
+            const result = await response.json();
+            alert(result.message);
+        }
+
+        // Email/Password Sign Up
+        async function handleSignUp() {
+            const name = document.getElementById('fullName').value;
+            const email = document.getElementById('newEmail').value;
+            const password = document.getElementById('newPassword').value;
+
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    action: 'signup',
+                    name: name,
+                    email: email,
+                    password: password
+                })
+            });
+
+            const result = await response.json();
+            alert(result.message);
+        }
+    </script>
+</body>
+</html>
